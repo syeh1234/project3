@@ -11,19 +11,20 @@ The initial target is chemistry and materials science, but the taxonomy is desig
 ## Repository layout
 
 ```text
-project3/
-├── __init__.py              # optional; not needed for flat imports
-├── config.py
-├── utils.py
-├── taxonomy.py
-├── pmc.py
-├── jats.py
-├── classifier.py
-├── pipeline.py
+figurelab-baseline/
+├── figurelab/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── utils.py
+│   ├── taxonomy.py
+│   ├── pmc.py
+│   ├── jats.py
+│   ├── classifier.py
+│   └── pipeline.py
 ├── pull_figures.py
 ├── characterize_figures.py
 ├── requirements.txt
-├── README.md
+├── .env.example
 └── data/                    # generated locally; excluded from Git
     ├── articles/
     ├── figures/
@@ -40,11 +41,11 @@ source .venv/bin/activate        # macOS/Linux
 pip install -r requirements.txt
 ```
 
-The scripts read environment variables directly. There is no `.env.example` file in this flat-layout repository, so set the API key in your shell before running classification. (A `.env` file will not be loaded automatically.)
+Copy `.env.example` to `.env` and add an API key for classification. The scripts read environment variables directly; if you use a `.env` file, export its values in your shell or install/use `python-dotenv`.
 
 ```bash
-export OPENAI_API_KEY="your-key"
-export FIGURELAB_VISION_MODEL="gpt-4.1-mini"
+export GEMINI_API_KEY="your-google-api-key"
+export FIGURELAB_VISION_MODEL="gemini-3.1-flash-lite"
 ```
 
 ## 2. Pull papers and figures from PMC
