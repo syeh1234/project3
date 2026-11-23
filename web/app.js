@@ -28,3 +28,9 @@ $("closeLightbox").onclick=closeFigure;$("prevFigure").onclick=()=>step(-1);$("n
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeFigure();closeFilters();}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("searchInput").focus();}if(!$("lightbox").classList.contains("hidden")){if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);}});
 window.addEventListener("resize",()=>{clearTimeout(window.__wallResize);window.__wallResize=setTimeout(()=>{ $("gallery").innerHTML=""; layoutWall(); },120);});
 load();
+
+// Shrink the top navigation after the page begins scrolling.
+const topbar=document.querySelector(".topbar");
+function updateTopbar(){topbar.classList.toggle("compact",window.scrollY>24);}
+window.addEventListener("scroll",updateTopbar,{passive:true});
+updateTopbar();
