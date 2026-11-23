@@ -1,164 +1,31 @@
-const state = {
-  figures: [],
-  filters: { category: new Set(), visual: new Set(), technique: new Set(), purpose: new Set() },
-  query: "",
-  sort: "relevance"
-};
-
-const $ = (id) => document.getElementById(id);
-const list = (value) => Array.isArray(value) ? value : (value ? [value] : []);
-const text = (value) => value == null ? "" : String(value);
-const unique = (values) => [...new Set(values.flatMap(list).map(text).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-const titleCase = (value) => text(value).replaceAll("_"," ").replace(/\b\w/g, c => c.toUpperCase());
-const escapeHtml = (value) => text(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fc = (r) => r.figure_characterization || {};
-const pc = (r) => r.paper_characterization || {};
-const paperTitle = (r) => r.paper_title || r.title || "Untitled paper";
-const caption = (r) => r.caption || r.figure_label || r.figure_id || "Figure without caption";
-const allTags = (r) => [...list(fc(r).visual_types), ...list(fc(r).experimental_techniques), ...list(fc(r).visualization_purposes)];
-
-async function loadFigures() {
-  $("loadError").classList.add("hidden");
-  $("gallery").innerHTML = '<div class="loading">Loading figures…</div>';
-  try {
-    const response = await fetch("/api/figures", {cache:"no-store"});
-    if (!response.ok) throw new Error("The local FigureLab server returned " + response.status);
-    const data = await response.json();
-    state.figures = data.figures || [];
-    renderFilters();
-    renderGallery();
-    if (!state.figures.length) {
-      $("resultsSubtitle").textContent = "No figure records found";
-      $("gallery").innerHTML = "";
-      $("emptyState").classList.remove("hidden");
-      $("emptyState").querySelector("h2").textContent = "Your library is empty";
-      $("emptyState").querySelector("p").textContent = "Run the PMC extraction and characterization steps, then refresh this page.";
-    }
-  } catch (error) {
-    $("gallery").innerHTML = "";
-    $("loadError").textContent = "Could not load the local figure library. Make sure you started it with python webapp.py. " + error.message;
-    $("loadError").classList.remove("hidden");
-    $("resultsSubtitle").textContent = "Unable to load data";
-  }
-}
-
-function renderFilters() {
-  const configs = [
-    ["category","categoryFilters","categoryCount", state.figures.map(r=>fc(r).paper_figure_category)],
-    ["visual","visualFilters","visualCount", state.figures.flatMap(r=>list(fc(r).visual_types))],
-    ["technique","techniqueFilters","techniqueCount", state.figures.flatMap(r=>list(fc(r).experimental_techniques))],
-    ["purpose","purposeFilters","purposeCount", state.figures.flatMap(r=>list(fc(r).visualization_purposes))]
-  ];
-  configs.forEach(([key, target, countId, values]) => {
-    const options = unique(values);
-    $(countId).textContent = options.length ? options.length : "";
-    $(target).innerHTML = options.map(value => {
-      const count = state.figures.filter(r => {
-        const vals = key==="category" ? [fc(r).paper_figure_category] :
-          key==="visual" ? list(fc(r).visual_types) :
-          key==="technique" ? list(fc(r).experimental_techniques) : list(fc(r).visualization_purposes);
-        return vals.includes(value);
-      }).length;
-      return '<label class="filter-option"><input type="checkbox" data-filter="'+key+'" value="'+escapeHtml(value)+'" '+(state.filters[key].has(value)?"checked":"")+'><span>'+escapeHtml(titleCase(value))+'</span><span class="option-number">'+count+'</span></label>';
-    }).join("") || '<span class="filter-option">No labels yet</span>';
-  });
-}
-
-function matches(r) {
-  const f=fc(r);
-  const selected = [
-    ["category", [f.paper_figure_category]],
-    ["visual", list(f.visual_types)],
-    ["technique", list(f.experimental_techniques)],
-    ["purpose", list(f.visualization_purposes)]
-  ];
-  if (selected.some(([key, vals]) => state.filters[key].size && ![...state.filters[key]].some(v=>vals.includes(v)))) return false;
-  if (!state.query) return true;
-  const haystack = [
-    paperTitle(r), caption(r), r.abstract, r.doi, r.pmcid, r.journal,
-    f.description, f.evidence, ...allTags(r), ...list(f.style_tags),
-    ...list(pc(r).research_fields), ...list(pc(r).subfields)
-  ].join(" ").toLowerCase();
-  return state.query.toLowerCase().split(/\s+/).every(term=>haystack.includes(term));
-}
-
-function renderGallery() {
-  const results=state.figures.filter(matches);
-  if (state.sort==="title") results.sort((a,b)=>paperTitle(a).localeCompare(paperTitle(b)));
-  if (state.sort==="category") results.sort((a,b)=>text(fc(a).paper_figure_category).localeCompare(text(fc(b).paper_figure_category)));
-  $("resultsSubtitle").textContent = results.length + " of " + state.figures.length + " figures";
-  $("emptyState").classList.toggle("hidden", results.length>0);
-  $("gallery").innerHTML = results.map((r,i)=>card(r,i)).join("");
-  renderActiveFilters();
-}
-
-function card(r,i) {
-  const f=fc(r);
-  const img=r.image_url ? '<img src="'+escapeHtml(r.image_url)+'" alt="'+escapeHtml(caption(r))+'" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=&quot;image-placeholder&quot;>▧</div>\'">' : '<div class="image-placeholder">▧</div>';
-  const tags=unique([...list(f.visual_types),...list(f.experimental_techniques)]).slice(0,3);
-  const status=f.status==="classified";
-  return '<article class="figure-card" data-index="'+i+'" tabindex="0" role="button" aria-label="Open '+escapeHtml(caption(r))+'">'+
-    '<div class="card-image">'+img+'</div><div class="card-body">'+
-    '<div class="card-kicker"><span class="category-pill">'+escapeHtml(titleCase(f.paper_figure_category||"unclassified"))+'</span><span class="review-dot '+(f.needs_review?"":"ok")+'" title="'+(f.needs_review?"Needs review":"No review flagged")+'"></span></div>'+
-    '<p class="card-caption">'+escapeHtml(caption(r))+'</p><div class="card-paper">'+escapeHtml(paperTitle(r))+'</div>'+
-    '<div class="card-tags">'+tags.map(t=>'<span class="tag">'+escapeHtml(titleCase(t))+'</span>').join("")+'</div>'+
-    '<div class="card-footer"><span>'+escapeHtml(r.journal||r.publication_year||"PMC article")+'</span><span class="arrow">↗</span></div>'+
-    '</div></article>';
-}
-
-function renderActiveFilters() {
-  const chips=[];
-  Object.entries(state.filters).forEach(([key,values])=>values.forEach(value=>chips.push({key,value,label:titleCase(value)})));
-  $("activeFilters").innerHTML=chips.map(c=>'<span class="active-chip">'+escapeHtml(c.label)+' <button data-remove="'+c.key+'" data-value="'+escapeHtml(c.value)+'" aria-label="Remove '+escapeHtml(c.label)+'">×</button></span>').join("");
-}
-
-function clearFilters() {
-  Object.values(state.filters).forEach(s=>s.clear());
-  state.query=""; $("searchInput").value="";
-  renderFilters(); renderGallery();
-}
-
-function openDetail(r) {
-  const f=fc(r), paper=pc(r);
-  const tags=unique([...list(f.visual_types),...list(f.chart_types),...list(f.experimental_techniques),...list(f.visualization_purposes),...list(f.style_tags)]);
-  const img=r.image_url ? '<img src="'+escapeHtml(r.image_url)+'" alt="'+escapeHtml(caption(r))+'">' : '<div class="image-placeholder">No local image available</div>';
-  const panels=list(f.panels).map((p,i)=>'<div class="detail-section"><h3>Panel '+escapeHtml(p.panel_label||String(i+1))+'</h3><p>'+escapeHtml(p.description||"")+'</p></div>').join("");
-  const doi=r.doi ? '<a class="source-link" href="https://doi.org/'+encodeURIComponent(r.doi)+'" target="_blank" rel="noreferrer">Open DOI ↗</a>' : "";
-  const pmc=r.pmcid ? '<a class="source-link" href="https://pmc.ncbi.nlm.nih.gov/articles/'+encodeURIComponent(r.pmcid)+'/" target="_blank" rel="noreferrer">Open PMC ↗</a>' : "";
-  $("detailContent").innerHTML='<div class="detail-grid"><div><div class="detail-visual">'+img+'</div><div class="detail-section"><h3>Figure caption</h3><p>'+escapeHtml(r.caption||"No caption was extracted.")+'</p></div>'+panels+'</div>'+
-    '<div class="detail-info"><div class="detail-kicker">'+escapeHtml(titleCase(f.paper_figure_category||"Unclassified figure"))+'</div>'+
-    '<h2 id="detailTitle">'+escapeHtml(paperTitle(r))+'</h2><div class="detail-paper">'+escapeHtml([r.journal,r.publication_year,r.figure_label||r.figure_id].filter(Boolean).join(" · "))+'</div>'+
-    '<div class="detail-section"><h3>AI description</h3><p>'+escapeHtml(f.description||"No description available.")+'</p></div>'+
-    '<div class="detail-section"><h3>Classification</h3><div class="detail-tags">'+tags.map(t=>'<span class="tag">'+escapeHtml(titleCase(t))+'</span>').join("")+'</div></div>'+
-    '<div class="detail-section"><h3>Paper context</h3><div class="detail-meta">'+meta("Research fields",list(paper.research_fields).join(", ")||"—")+meta("Subfields",list(paper.subfields).join(", ")||"—")+meta("Panel count",f.panel_count??"—")+meta("Confidence",f.confidence==null?"—":Math.round(Number(f.confidence)*100)+"%")+meta("Needs review",f.needs_review?"Yes":"No")+meta("Technique",list(f.experimental_techniques).map(titleCase).join(", ")||"Not specified")+'</div></div>'+
-    '<div class="detail-section"><h3>Source</h3><p>'+escapeHtml(r.doi||r.pmcid||"Source identifier unavailable")+'</p><div style="display:flex;gap:14px;margin-top:9px">'+doi+pmc+'</div></div>'+
-    '<div class="detail-section"><h3>Model evidence</h3><p>'+escapeHtml(f.evidence||"No evidence note available.")+'</p></div></div></div>';
-  $("detailBackdrop").classList.remove("hidden");
-  document.body.style.overflow="hidden";
-}
-function meta(label,value){return '<div class="meta-item"><div class="meta-label">'+escapeHtml(label)+'</div><div class="meta-value">'+escapeHtml(value)+'</div></div>'}
-function closeDetail(){$("detailBackdrop").classList.add("hidden");document.body.style.overflow=""}
-
-document.addEventListener("change",e=>{
-  const input=e.target.closest("input[data-filter]");
-  if(input){const set=state.filters[input.dataset.filter];input.checked?set.add(input.value):set.delete(input.value);renderGallery();}
-});
-document.addEventListener("click",e=>{
-  const cardEl=e.target.closest(".figure-card");
-  if(cardEl){const visible=state.figures.filter(matches);let ordered=visible;if(state.sort==="title")ordered=[...visible].sort((a,b)=>paperTitle(a).localeCompare(paperTitle(b)));if(state.sort==="category")ordered=[...visible].sort((a,b)=>text(fc(a).paper_figure_category).localeCompare(text(fc(b).paper_figure_category)));openDetail(ordered[Number(cardEl.dataset.index)]);return;}
-  const remove=e.target.closest("[data-remove]");
-  if(remove){state.filters[remove.dataset.remove].delete(remove.dataset.value);renderFilters();renderGallery();}
-});
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape")closeDetail();
-  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("searchInput").focus();}
-  if(e.key==="Enter"&&e.target.classList.contains("figure-card"))e.target.click();
-});
-$("searchInput").addEventListener("input",e=>{state.query=e.target.value.trim();renderGallery();});
-$("sortSelect").addEventListener("change",e=>{state.sort=e.target.value;renderGallery();});
-$("clearFilters").addEventListener("click",clearFilters);
-$("emptyClear").addEventListener("click",clearFilters);
-$("refreshButton").addEventListener("click",loadFigures);
-$("closeModal").addEventListener("click",closeDetail);
-$("detailBackdrop").addEventListener("click",e=>{if(e.target===$("detailBackdrop"))closeDetail();});
-loadFigures();
+const state={all:[],visible:[],filters:{visual:new Set(),technique:new Set(),purpose:new Set(),field:new Set()},category:"all",query:"",sort:"recent",activeIndex:-1};
+const $=id=>document.getElementById(id), arr=v=>Array.isArray(v)?v:(v?[v]:[]), str=v=>v==null?"":String(v), uniq=a=>[...new Set(a.flatMap(arr).map(str).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), title=v=>str(v).replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase()), esc=v=>str(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fc=r=>r.figure_characterization||{},pc=r=>r.paper_characterization||{}, caption=r=>r.caption||r.figure_label||r.figure_id||"Figure without caption", paper=r=>r.paper_title||r.title||"Untitled paper";
+const vals=(r,key)=>key==="visual"?arr(fc(r).visual_types):key==="technique"?arr(fc(r).experimental_techniques):key==="purpose"?arr(fc(r).visualization_purposes):arr(pc(r).research_fields);
+const cats=[["all","All figures"],["background","Background"],["method","Methods"],["data","Data"],["example","Examples"],["prompt","Prompts"],["table","Tables"],["other","Other"]];
+function normalizePath(p){return str(p).replace(/^\//,"")}
+async function load(){ $("loadError").classList.add("hidden");try{let res=await fetch("/api/figures",{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);let d=await res.json();state.all=d.figures||[];state.all.forEach((r,i)=>{r.__index=i;r.__aspect=1.35;});renderCategories();renderFilters();readUrl();render();if(!state.all.length){$("emptyState").classList.remove("hidden");$("resultsSubtitle").textContent="No figure records yet";}}catch(e){$("loadError").textContent="Unable to load FigureLab data. Start the server with python webapp.py. "+e.message;$("loadError").classList.remove("hidden");}}
+function renderCategories(){let counts={};state.all.forEach(r=>{let c=fc(r).paper_figure_category||"other";counts[c]=(counts[c]||0)+1;});$("categoryStrip").innerHTML=cats.map(([id,label])=>'<button class="category-chip '+(state.category===id?"active":"")+'" data-category="'+id+'">'+label+(id==="all"?"":" <small>"+(counts[id]||0)+"</small>")+'</button>').join("");}
+function renderFilters(){let defs=[["visual","visualFilters","Visual type"],["technique","techniqueFilters","Technique"],["purpose","purposeFilters","Purpose"],["field","fieldFilters","Field"]];defs.forEach(([key,target])=>{let options=uniq(state.all.flatMap(r=>vals(r,key)));$(target).innerHTML=options.slice(0,45).map(v=>{let n=state.all.filter(r=>vals(r,key).includes(v)).length;return '<label class="filter-option"><input type="checkbox" data-filter="'+key+'" value="'+esc(v)+'" '+(state.filters[key].has(v)?"checked":"")+'><span>'+esc(title(v))+'</span><span class="count">'+n+'</span></label>';}).join("")||'<span class="filter-option">No labels available</span>';});}
+function readUrl(){let p=new URLSearchParams(location.search);state.query=p.get("q")||"";$("searchInput").value=state.query;state.category=p.get("cat")||"all";if(!cats.some(c=>c[0]===state.category))state.category="all";for(let [key,param] of [["technique","technique"],["visual","visual"],["purpose","purpose"],["field","field"]])state.filters[key]=new Set(p.getAll(param));}
+function syncUrl(){let p=new URLSearchParams();if(state.query)p.set("q",state.query);if(state.category!=="all")p.set("cat",state.category);for(let [key,s] of Object.entries(state.filters))s.forEach(v=>p.append(key==="technique"?"technique":key,v));history.replaceState(null,"",location.pathname+(p.toString()?"?"+p.toString():"")+(location.hash||""));}
+function matches(r){let f=fc(r);if(state.category!=="all"&&(f.paper_figure_category||"other")!==state.category)return false;for(let [key,set] of Object.entries(state.filters))if(set.size&&!([...set].some(v=>vals(r,key).includes(v))))return false;if(!state.query)return true;let h=[paper(r),caption(r),r.abstract,r.doi,r.pmcid,r.journal,f.description,f.evidence,...vals(r,"visual"),...vals(r,"technique"),...vals(r,"purpose"),...arr(f.style_tags),...arr(pc(r).subfields)].join(" ").toLowerCase();return state.query.toLowerCase().split(/\s+/).every(w=>h.includes(w));}
+function render(){state.visible=state.all.filter(matches);if(state.sort==="title")state.visible.sort((a,b)=>paper(a).localeCompare(paper(b)));if(state.sort==="category")state.visible.sort((a,b)=>str(fc(a).paper_figure_category).localeCompare(str(fc(b).paper_figure_category)));$("resultsSubtitle").textContent=state.visible.length.toLocaleString()+" figures · "+state.all.length.toLocaleString()+" in library";$("emptyState").classList.toggle("hidden",state.visible.length>0);$("gallery").innerHTML="";layoutWall();renderActive();let n=Object.values(state.filters).reduce((s,x)=>s+x.size,0)+(state.category!=="all"?1:0);$("filterBadge").textContent=n;$("filterBadge").classList.toggle("hidden",!n);$("categoryStrip").querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.dataset.category===state.category));syncUrl();}
+function renderActive(){let chips=[];if(state.query)chips.push({label:'“'+state.query+'”',clear:()=>{state.query="";$("searchInput").value="";}});if(state.category!=="all")chips.push({label:title(state.category),clear:()=>state.category="all"});for(let [k,s] of Object.entries(state.filters))s.forEach(v=>chips.push({label:title(v),clear:()=>s.delete(v)}));$("activeFilters").innerHTML=chips.map((c,i)=>'<span class="active-chip">'+esc(c.label)+' <button data-chip="'+i+'">×</button></span>').join("");$("activeFilters")._chips=chips;}
+function imagePath(r){return r.image_url||""}
+function layoutWall(){let host=$("gallery");if(!state.visible.length)return;let width=host.clientWidth||900,gap=9,target=205,row=[],rowAspect=0;const flush=(last=false)=>{if(!row.length)return;let h=(width-gap*(row.length-1))/rowAspect;if(!last)h=Math.max(135,Math.min(270,h));else h=Math.min(215,h);let el=document.createElement("div");el.className="wall-row";row.forEach((r,i)=>{let tile=document.createElement("article");tile.className="figure-tile";tile.tabIndex=0;tile.dataset.uid=r.figure_uid||r.figure_id||r.__index;tile.style.flex=(r.__aspect*h)+" 1 0";tile.style.height=h+"px";let src=imagePath(r);tile.innerHTML=(src?'<img loading="lazy" src="'+esc(src)+'" alt="'+esc(caption(r))+'">':'<div class="tile-placeholder">▧</div>')+'<div class="tile-overlay"><span class="tile-type">'+esc(title(fc(r).paper_figure_category||"Unclassified"))+'</span><span class="tile-caption">'+esc(caption(r))+'</span><span class="tile-paper">'+esc(paper(r))+'</span></div>';tile.addEventListener("click",()=>openFigure(state.visible.indexOf(r)));tile.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openFigure(state.visible.indexOf(r));}});el.appendChild(tile);});host.appendChild(el);row=[];rowAspect=0;};
+state.visible.forEach((r,i)=>{let a=Number(r.image_width&&r.image_height?r.image_width/r.image_height:0);if(!(a>0&&a<4))a=1.25;r.__aspect=Math.max(.65,Math.min(2.2,a));row.push(r);rowAspect+=r.__aspect;if((rowAspect*target+gap*(row.length-1))>=width)flush(false);});flush(true);}
+function clearAll(){state.category="all";Object.values(state.filters).forEach(s=>s.clear());state.query="";$("searchInput").value="";renderFilters();render();}
+function openFigure(i){if(i<0||i>=state.visible.length)return;state.activeIndex=i;showFigure();$("lightbox").classList.remove("hidden");document.body.style.overflow="hidden";location.hash="fig="+encodeURIComponent(state.visible[i].figure_uid||state.visible[i].figure_id||i);}
+function showFigure(){let r=state.visible[state.activeIndex];if(!r)return;let f=fc(r),p=pc(r),src=imagePath(r);$("lightboxImage").innerHTML=src?'<img src="'+esc(src)+'" alt="'+esc(caption(r))+'">':'<div class="tile-placeholder">No local image available</div>';let tags=uniq([...arr(f.visual_types),...arr(f.chart_types),...arr(f.experimental_techniques),...arr(f.visualization_purposes),...arr(f.style_tags)]);let doi=r.doi?'<a href="https://doi.org/'+encodeURIComponent(r.doi)+'" target="_blank" rel="noreferrer">DOI ↗</a>':"",pmc=r.pmcid?'<a href="https://pmc.ncbi.nlm.nih.gov/articles/'+encodeURIComponent(r.pmcid)+'/" target="_blank" rel="noreferrer">PMC ↗</a>':"";$("lightboxInfo").innerHTML='<div class="info-category">'+esc(title(f.paper_figure_category||"Unclassified"))+'</div><h2>'+esc(paper(r))+'</h2><div class="info-paper">'+esc([r.authors&&r.authors.join(", "),r.journal,r.publication_year].filter(Boolean).join(" · "))+'</div><div class="info-block"><h3>Figure caption</h3><p>'+esc(caption(r))+'</p></div><div class="info-block"><h3>AI description</h3><p>'+esc(f.description||"No description available.")+'</p></div><div class="info-block"><h3>Classification</h3><div class="info-tags">'+tags.map(t=>'<span>'+esc(title(t))+'</span>').join("")+'</div></div><div class="info-block"><h3>Research context</h3><p>'+esc([arr(p.research_fields).map(title).join(", "),arr(p.subfields).join(", "),f.panel_count!=null?"Panels: "+f.panel_count:""].filter(Boolean).join("\n")||"Not available")+'</p></div><div class="info-block"><h3>Original source</h3><p>'+esc(r.doi||r.pmcid||"Source identifier unavailable")+'</p><div class="info-links">'+doi+pmc+'</div></div><div class="info-block"><h3>Caption as published</h3><p>'+esc(r.caption||"No caption")+'</p></div>';$("lightboxCounter").textContent=(state.activeIndex+1)+" / "+state.visible.length;$("prevFigure").disabled=state.activeIndex===0;$("nextFigure").disabled=state.activeIndex===state.visible.length-1;}
+function closeFigure(){ $("lightbox").classList.add("hidden");document.body.style.overflow="";if(location.hash.startsWith("#fig="))history.replaceState(null,"",location.pathname+location.search);}
+function step(n){let i=state.activeIndex+n;if(i>=0&&i<state.visible.length){state.activeIndex=i;showFigure();location.hash="fig="+encodeURIComponent(state.visible[i].figure_uid||state.visible[i].figure_id||i);}}
+document.addEventListener("change",e=>{let x=e.target.closest("[data-filter]");if(x){let s=state.filters[x.dataset.filter];x.checked?s.add(x.value):s.delete(x.value);render();}});
+document.addEventListener("click",e=>{let b=e.target.closest("[data-category]");if(b){state.category=b.dataset.category;render();}let c=e.target.closest("[data-chip]");if(c){$("activeFilters")._chips[Number(c.dataset.chip)].clear();renderFilters();render();}});
+$("searchInput").addEventListener("input",e=>{state.query=e.target.value.trim();$("searchbox")?.classList.toggle("has-value",!!state.query);render();});$("clearSearch").onclick=()=>{$("searchInput").value="";state.query="";render();};
+$("sortSelect").onchange=e=>{state.sort=e.target.value;render();};$("clearFilters").onclick=clearAll;$("emptyClear").onclick=clearAll;$("refreshButton").onclick=load;
+$("filterToggle").onclick=()=>{$("filters").classList.add("open");$("drawerShade").classList.remove("hidden");};function closeFilters(){$("filters").classList.remove("open");$("drawerShade").classList.add("hidden");}$("closeFilters").onclick=closeFilters;$("drawerShade").onclick=closeFilters;
+$("closeLightbox").onclick=closeFigure;$("prevFigure").onclick=()=>step(-1);$("nextFigure").onclick=()=>step(1);$("lightbox").addEventListener("click",e=>{if(e.target===$("lightbox"))closeFigure();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeFigure();closeFilters();}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("searchInput").focus();}if(!$("lightbox").classList.contains("hidden")){if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);}});
+window.addEventListener("resize",()=>{clearTimeout(window.__wallResize);window.__wallResize=setTimeout(()=>layoutWall(),120);});
+load();
