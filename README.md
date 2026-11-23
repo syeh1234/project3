@@ -184,6 +184,20 @@ Other optional environment variables:
 - `FIGURELAB_REQUEST_DELAY`: delay between PMC article requests, in seconds.
 - `FIGURELAB_VISION_MODEL`: Gemini model ID used for characterization.
 
+## 3. Browse the local figure library
+
+After extraction (and preferably characterization), start the local web interface:
+
+```bash
+python webapp.py
+```
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser. Stop the server with `Ctrl+C`.
+
+The gallery reads `data/metadata/characterized_figures.jsonl` when it exists; otherwise it falls back to `data/metadata/figures.jsonl`. It provides text search, filters for available figure labels, a responsive thumbnail grid, and a detail view with source-paper metadata and classification output. The interface runs locally and does not require a separate frontend package manager or Node.js installation.
+
+This is an initial local prototype. It does not yet provide user accounts, cloud hosting, database-backed search, or multi-user access. Only run it on your own machine with the default localhost binding.
+
 ## Inspecting the output
 
 JSONL is a text format with one JSON object per line. You can open the files in a code editor, or pretty-print each record in the terminal:
