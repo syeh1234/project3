@@ -1,8 +1,8 @@
 """JATS XML parsing: article metadata, figures, and figure-to-section references."""
 
 from collections import defaultdict
-from .utils import local_name, element_text, first_descendant
-from .taxonomy import section_category, publication_type_from_article_type
+from utils import local_name, element_text, first_descendant
+from taxonomy import section_category, publication_type_from_article_type
 
 
 def _all(parent, name):
