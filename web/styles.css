@@ -34,6 +34,7 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
 
 /* Compact sticky header and persistent filter rail */
 :root{--topbar-height:62px}
+body.scrolled{--topbar-height:46px}
 .topbar{height:var(--topbar-height);transition:height .2s ease,box-shadow .2s ease;gap:0}
 .topbar.compact{height:46px;box-shadow:0 3px 12px #17251d10}
 .topbar.compact .brand-mark{width:21px;height:21px}
