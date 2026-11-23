@@ -1,95 +1,54 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f8f6">
-  <title>FigureLab — Scientific Figure Library</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f7f4"><title>FigureLab — Scientific Figure Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="/" aria-label="FigureLab home">
-      <span class="brand-mark"><span></span><span></span><span></span><span></span></span>
-      <span>Figure<span class="brand-light">Lab</span></span>
-    </a>
-    <div class="topbar-center"><span class="status-dot"></span><span>Scientific figure library</span></div>
-    <div class="topbar-right">
-      <a href="https://github.com/syeh1234/project3" target="_blank" rel="noreferrer" class="text-link">GitHub <span aria-hidden="true">↗</span></a>
-      <button class="icon-button" id="refreshButton" title="Refresh library" aria-label="Refresh library">↻</button>
-    </div>
-  </header>
-
-  <main class="app-shell">
-    <section class="intro">
-      <div>
-        <div class="eyebrow">EXPLORE THE VISUAL LANGUAGE OF RESEARCH</div>
-        <h1>Find the figure.<br><span>Understand the science.</span></h1>
-        <p class="intro-copy">Search scientific figures across chemistry, materials science, and beyond.</p>
-      </div>
-      <div class="intro-note"><span class="note-icon">✳</span><span>Every figure, connected<br>to its scientific context.</span></div>
-    </section>
-
-    <section class="search-row" aria-label="Search figures">
-      <div class="searchbox">
-        <span class="search-icon">⌕</span>
-        <input id="searchInput" type="search" placeholder="Search captions, papers, techniques, or keywords…" autocomplete="off">
-        <kbd>⌘ K</kbd>
-      </div>
-      <label class="sort-control"><span>Sort</span>
-        <select id="sortSelect"><option value="relevance">Best match</option><option value="title">Paper title</option><option value="category">Figure category</option></select>
-      </label>
-    </section>
-
-    <div class="content-layout">
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-heading"><span>REFINE RESULTS</span><button id="clearFilters" class="clear-button">Clear all</button></div>
-        <div class="filter-group">
-          <div class="filter-title">Figure category <span class="filter-count" id="categoryCount"></span></div>
-          <div id="categoryFilters" class="filter-options"></div>
-        </div>
-        <div class="filter-group">
-          <div class="filter-title">Visual type <span class="filter-count" id="visualCount"></span></div>
-          <div id="visualFilters" class="filter-options"></div>
-        </div>
-        <div class="filter-group">
-          <div class="filter-title">Experimental technique <span class="filter-count" id="techniqueCount"></span></div>
-          <div id="techniqueFilters" class="filter-options"></div>
-        </div>
-        <div class="filter-group">
-          <div class="filter-title">Visualization purpose <span class="filter-count" id="purposeCount"></span></div>
-          <div id="purposeFilters" class="filter-options"></div>
-        </div>
-        <div class="sidebar-foot">Filters are generated from the labels in your local FigureLab dataset.</div>
-      </aside>
-
-      <section class="results-area">
-        <div class="results-toolbar">
-          <div><div class="results-title">Figure gallery</div><div class="results-subtitle" id="resultsSubtitle">Loading your library…</div></div>
-          <div class="view-toggle" aria-label="Gallery view"><button class="view-button active" title="Grid view">▦</button></div>
-        </div>
-        <div id="activeFilters" class="active-filters"></div>
-        <div id="gallery" class="gallery" aria-live="polite"></div>
-        <div id="emptyState" class="empty-state hidden">
-          <div class="empty-symbol">⌕</div><h2>No figures found</h2>
-          <p>Try a different search term or clear some filters.</p>
-          <button id="emptyClear" class="primary-button">Clear filters</button>
-        </div>
-        <div id="loadError" class="load-error hidden"></div>
-      </section>
-    </div>
-    <footer class="page-footer"><span>FIGURELAB · RESEARCH FIGURES, MADE DISCOVERABLE</span><span>Figures remain attributed to their original authors and sources.</span></footer>
-  </main>
-
-  <div class="modal-backdrop hidden" id="detailBackdrop">
-    <section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
-      <button class="modal-close" id="closeModal" aria-label="Close details">×</button>
-      <div id="detailContent"></div>
-    </section>
-  </div>
-  <script src="/app.js"></script>
-</body>
-</html>
+<header class="topbar">
+ <a class="brand" href="/" aria-label="FigureLab home"><span class="brand-mark"><i></i><i></i><i></i><i></i></span><span>Figure<span>Lab</span></span></a>
+ <nav class="topnav"><a class="active" href="/">Explore</a><a href="#about" id="aboutLink">About the library</a></nav>
+ <div class="top-actions"><span class="library-state"><i></i> Local library</span><button class="quiet-button" id="refreshButton" title="Refresh library">↻</button></div>
+</header>
+<main>
+ <section class="hero">
+  <div class="eyebrow">A VISUAL INDEX OF SCIENTIFIC RESEARCH</div>
+  <h1>Ideas take shape<br><em>in figures.</em></h1>
+  <p>Explore how researchers visualize experiments, explain mechanisms, and communicate discoveries.</p>
+ </section>
+ <section class="search-area">
+  <div class="searchbox"><span class="search-symbol">⌕</span><input id="searchInput" type="search" placeholder="Search topics, captions, techniques, or papers…" autocomplete="off"><kbd>⌘ K</kbd><button id="clearSearch" aria-label="Clear search">×</button></div>
+  <div class="search-bottom"><span id="resultsSubtitle">Loading figure library…</span><div class="search-tools"><button id="filterToggle" class="filter-toggle">☷ <span>Filters</span><b id="filterBadge" class="hidden">0</b></button><select id="sortSelect" aria-label="Sort figures"><option value="recent">Recently added</option><option value="title">Paper title</option><option value="category">Figure type</option></select></div></div>
+ </section>
+ <div class="category-strip" id="categoryStrip" aria-label="Figure categories"></div>
+ <div class="workspace">
+  <aside class="filters" id="filters">
+   <div class="filter-head"><strong>Refine</strong><button id="clearFilters">Reset</button><button id="closeFilters" class="mobile-close">×</button></div>
+   <section class="filter-section"><h3>Visual type</h3><div id="visualFilters"></div></section>
+   <section class="filter-section"><h3>Experimental technique</h3><div id="techniqueFilters"></div></section>
+   <section class="filter-section"><h3>Visualization purpose</h3><div id="purposeFilters"></div></section>
+   <section class="filter-section"><h3>Research field</h3><div id="fieldFilters"></div></section>
+   <p class="filter-note">Options are drawn from the classifications in this library.</p>
+  </aside>
+  <section class="gallery-wrap">
+   <div id="activeFilters" class="active-filters"></div>
+   <div id="gallery" class="wall" aria-live="polite"></div>
+   <div id="emptyState" class="empty-state hidden"><div>⌕</div><h2>No matching figures</h2><p>Try a different keyword or remove a filter.</p><button id="emptyClear">Clear search and filters</button></div>
+   <div id="loadError" class="load-error hidden"></div>
+  </section>
+ </div>
+ <footer id="about"><span>FIGURELAB</span><span>Scientific figures, connected to their papers and methods.</span><span>Source images remain subject to their original licenses.</span></footer>
+</main>
+<div class="drawer-shade hidden" id="drawerShade"></div>
+<div class="lightbox hidden" id="lightbox" role="dialog" aria-modal="true" aria-label="Figure details">
+ <button class="lightbox-close" id="closeLightbox" aria-label="Close">×</button>
+ <button class="lightbox-nav prev" id="prevFigure" aria-label="Previous figure">‹</button>
+ <button class="lightbox-nav next" id="nextFigure" aria-label="Next figure">›</button>
+ <div class="lightbox-layout"><div class="lightbox-image" id="lightboxImage"></div><aside class="lightbox-info" id="lightboxInfo"></aside></div>
+ <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
+<script src="/app.js"></script>
+</body></html>
