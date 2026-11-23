@@ -8,10 +8,10 @@ from urllib.parse import urlparse
 
 import requests
 
-from .config import (
+from config import (
     EUTILS_URL, PMC_S3_BASE, USER_AGENT, REQUEST_DELAY, IMAGE_EXTENSIONS
 )
-from .utils import convert_s3_to_https, url_filename
+from utils import convert_s3_to_https, url_filename
 
 
 class PMCClient:
