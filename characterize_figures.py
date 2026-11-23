@@ -1,7 +1,7 @@
 """Run paper-level and figure-level AI characterization.
 
-Set OPENAI_API_KEY, then:
-    python characterize_figures.py --limit 10
+Set GEMINI_API_KEY, then:
+    python characterize_figures.py --limit 2
     python characterize_figures.py --force
 """
 
