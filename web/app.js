@@ -31,6 +31,6 @@ load();
 
 // Shrink the top navigation after the page begins scrolling.
 const topbar=document.querySelector(".topbar");
-function updateTopbar(){topbar.classList.toggle("compact",window.scrollY>24);}
+function updateTopbar(){const compact=window.scrollY>24;topbar.classList.toggle("compact",compact);document.body.classList.toggle("scrolled",compact);}
 window.addEventListener("scroll",updateTopbar,{passive:true});
 updateTopbar();
