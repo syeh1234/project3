@@ -30,3 +30,19 @@ footer{display:flex;justify-content:space-between;gap:15px;border-top:1px solid 
  .mobile-close{display:none}
  .search-area{top:62px}
 }
+
+
+/* Compact sticky header and persistent filter rail */
+:root{--topbar-height:62px}
+.topbar{height:var(--topbar-height);transition:height .2s ease,box-shadow .2s ease;gap:0}
+.topbar.compact{height:46px;box-shadow:0 3px 12px #17251d10}
+.topbar.compact .brand-mark{width:21px;height:21px}
+.topbar.compact .quiet-button{width:28px;height:28px}
+.search-area{top:var(--topbar-height);margin-top:0;padding:10px 0 0;transition:top .2s ease}
+.filters{position:sticky !important;align-self:start;top:calc(var(--topbar-height) + 112px);max-height:calc(100vh - var(--topbar-height) - 124px);overflow-y:auto}
+.workspace{align-items:start;overflow:visible}
+@media(max-width:850px){
+ :root{--topbar-height:62px}
+ .topbar.compact{height:50px}
+ .filters{position:static !important;top:auto;max-height:none;overflow:visible}
+}
