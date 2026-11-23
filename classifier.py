@@ -90,7 +90,7 @@ def _json_from_response(text):
 
 
 class VisionClassifier:
-    def __init__(self, model=None, api_key=None, timeout=120):
+    def __init__(self, model=None, api_key=None, timeout=300):
         self.model = (
             model
             or os.getenv("FIGURELAB_VISION_MODEL", "gemini-3.1-flash-lite")
@@ -138,8 +138,10 @@ class VisionClassifier:
         }
 
         last_error = None
+        max_attempts = 4
+        retryable_statuses = {408, 429}
 
-        for attempt in range(3):
+        for attempt in range(max_attempts):
             try:
                 response = self.client.post(
                     self.url,
@@ -147,14 +149,17 @@ class VisionClassifier:
                     headers=headers,
                 )
 
-                if response.status_code == 429 or response.status_code >= 500:
+                if (
+                    response.status_code in retryable_statuses
+                    or response.status_code >= 500
+                ):
                     last_error = (
                         f"HTTP {response.status_code}: "
                         f"{response.text[:400]}"
                     )
 
-                    if attempt < 2:
-                        time.sleep(2 + attempt * 3)
+                    if attempt < max_attempts - 1:
+                        time.sleep(2 ** (attempt + 1))
                         continue
 
                     break
@@ -203,11 +208,17 @@ class VisionClassifier:
                 self.usage["errors"] += 1
                 raise
 
-            except Exception as exc:
-                last_error = repr(exc)
+            except httpx.TransportError as exc:
+                # Includes connect/read timeouts and other transient
+                # transport failures. Do not retry arbitrary programming,
+                # parsing, authentication, or request-validation errors.
+                last_error = f"{type(exc).__name__}: {exc}"
 
-                if attempt < 2:
-                    time.sleep(2 + attempt * 3)
+                if attempt < max_attempts - 1:
+                    time.sleep(2 ** (attempt + 1))
+                    continue
+
+                break
 
         self.usage["errors"] += 1
         raise RuntimeError(last_error or "Unknown Gemini API error")
