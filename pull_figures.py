@@ -10,15 +10,15 @@ import json
 import time
 from pathlib import Path
 
-from figurelab.config import (
+from config import (
     DEFAULT_PMC_QUERY, FIGURE_DIR, ARTICLE_DIR, METADATA_DIR,
     FIGURES_JSONL, PAPERS_JSONL, PROJECT_ROOT
 )
-from figurelab.pmc import PMCClient, match_images
-from figurelab.jats import (
+from pmc import PMCClient, match_images
+from jats import (
     extract_article_metadata, extract_section_references, extract_figures
 )
-from figurelab.utils import safe_filename, write_jsonl, read_jsonl
+from utils import safe_filename, write_jsonl, read_jsonl
 
 
 def _is_cc_license(code):
