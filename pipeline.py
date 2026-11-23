@@ -4,9 +4,9 @@ from collections import OrderedDict
 from pathlib import Path
 import json
 
-from .classifier import VisionClassifier, normalize_figure_result
-from .config import FIGURES_JSONL, CHARACTERIZED_JSONL, PROJECT_ROOT
-from .utils import read_jsonl, write_jsonl
+from classifier import VisionClassifier, normalize_figure_result
+from config import FIGURES_JSONL, CHARACTERIZED_JSONL, PROJECT_ROOT
+from utils import read_jsonl, write_jsonl
 
 
 def _resolve_images(record):

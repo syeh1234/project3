@@ -11,20 +11,19 @@ The initial target is chemistry and materials science, but the taxonomy is desig
 ## Repository layout
 
 ```text
-figurelab-baseline/
-├── figurelab/
-│   ├── __init__.py
-│   ├── config.py
-│   ├── utils.py
-│   ├── taxonomy.py
-│   ├── pmc.py
-│   ├── jats.py
-│   ├── classifier.py
-│   └── pipeline.py
+project3/
+├── __init__.py              # optional; not needed for flat imports
+├── config.py
+├── utils.py
+├── taxonomy.py
+├── pmc.py
+├── jats.py
+├── classifier.py
+├── pipeline.py
 ├── pull_figures.py
 ├── characterize_figures.py
 ├── requirements.txt
-├── .env.example
+├── README.md
 └── data/                    # generated locally; excluded from Git
     ├── articles/
     ├── figures/
@@ -41,7 +40,7 @@ source .venv/bin/activate        # macOS/Linux
 pip install -r requirements.txt
 ```
 
-Copy `.env.example` to `.env` and add an API key for classification. The scripts read environment variables directly; if you use a `.env` file, export its values in your shell or install/use `python-dotenv`.
+The scripts read environment variables directly. There is no `.env.example` file in this flat-layout repository, so set the API key in your shell before running classification. (A `.env` file will not be loaded automatically.)
 
 ```bash
 export OPENAI_API_KEY="your-key"

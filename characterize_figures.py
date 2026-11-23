@@ -6,8 +6,8 @@ Set OPENAI_API_KEY, then:
 """
 
 import argparse
-from figurelab.config import FIGURES_JSONL, CHARACTERIZED_JSONL
-from figurelab.pipeline import characterize
+from config import FIGURES_JSONL, CHARACTERIZED_JSONL
+from pipeline import characterize
 
 
 def main():

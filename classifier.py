@@ -11,7 +11,7 @@ from pathlib import Path
 import httpx
 from PIL import Image
 
-from .taxonomy import (
+from taxonomy import (
     PAPER_FIGURE_CATEGORIES, VISUAL_TYPES, CHART_TYPES,
     EXPERIMENTAL_TECHNIQUES, VISUALIZATION_PURPOSES,
     PUBLICATION_TYPES, RESEARCH_FIELDS

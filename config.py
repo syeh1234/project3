@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.getenv("FIGURELAB_DATA", PROJECT_ROOT / "data")).expanduser()
 
 FIGURE_DIR = DATA_DIR / "figures"
