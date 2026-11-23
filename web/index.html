@@ -16,12 +16,12 @@
 <main>
  <section class="search-area">
   <div class="searchbox"><span class="search-symbol">⌕</span><input id="searchInput" type="search" placeholder="Search topics, captions, techniques, or papers…" autocomplete="off"><kbd>⌘ K</kbd><button id="clearSearch" aria-label="Clear search">×</button></div>
-  <div class="search-bottom"><span id="resultsSubtitle">Loading figure library…</span><div class="search-tools"><button id="filterToggle" class="filter-toggle">☷ <span>Filters</span><b id="filterBadge" class="hidden">0</b></button><select id="sortSelect" aria-label="Sort figures"><option value="recent">Recently added</option><option value="title">Paper title</option><option value="category">Figure type</option></select></div></div>
+  <div class="search-bottom"><span id="resultsSubtitle">Loading figure library…</span><div class="search-tools"><select id="sortSelect" aria-label="Sort figures"><option value="recent">Recently added</option><option value="title">Paper title</option><option value="category">Figure type</option></select></div></div>
  </section>
- <div class="category-strip" id="categoryStrip" aria-label="Figure categories"></div>
  <div class="workspace">
   <aside class="filters" id="filters">
    <div class="filter-head"><strong>Refine</strong><button id="clearFilters">Reset</button><button id="closeFilters" class="mobile-close">×</button></div>
+   <section class="filter-section"><h3>Figure category</h3><div id="categoryFilters"></div></section>
    <section class="filter-section"><h3>Visual type</h3><div id="visualFilters"></div></section>
    <section class="filter-section"><h3>Experimental technique</h3><div id="techniqueFilters"></div></section>
    <section class="filter-section"><h3>Visualization purpose</h3><div id="purposeFilters"></div></section>
