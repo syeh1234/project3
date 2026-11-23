@@ -22,10 +22,10 @@ function closeFigure(){ $("lightbox").classList.add("hidden");document.body.styl
 function step(n){let i=state.activeIndex+n;if(i>=0&&i<state.visible.length){state.activeIndex=i;showFigure();location.hash="fig="+encodeURIComponent(state.visible[i].figure_uid||state.visible[i].figure_id||i);}}
 document.addEventListener("change",e=>{let x=e.target.closest("[data-filter]");if(x){let s=state.filters[x.dataset.filter];x.checked?s.add(x.value):s.delete(x.value);render();}});
 document.addEventListener("click",e=>{let b=e.target.closest("[data-category]");if(b){state.category=b.dataset.category;render();}let c=e.target.closest("[data-chip]");if(c){$("activeFilters")._chips[Number(c.dataset.chip)].clear();renderFilters();render();}});
-$("searchInput").addEventListener("input",e=>{state.query=e.target.value.trim();$("searchbox")?.classList.toggle("has-value",!!state.query);render();});$("clearSearch").onclick=()=>{$("searchInput").value="";state.query="";render();};
+$("searchInput").addEventListener("input",e=>{state.query=e.target.value.trim();document.querySelector(".searchbox").classList.toggle("has-value",!!state.query);render();});$("clearSearch").onclick=()=>{$("searchInput").value="";state.query="";render();};
 $("sortSelect").onchange=e=>{state.sort=e.target.value;render();};$("clearFilters").onclick=clearAll;$("emptyClear").onclick=clearAll;$("refreshButton").onclick=load;
 $("filterToggle").onclick=()=>{$("filters").classList.add("open");$("drawerShade").classList.remove("hidden");};function closeFilters(){$("filters").classList.remove("open");$("drawerShade").classList.add("hidden");}$("closeFilters").onclick=closeFilters;$("drawerShade").onclick=closeFilters;
 $("closeLightbox").onclick=closeFigure;$("prevFigure").onclick=()=>step(-1);$("nextFigure").onclick=()=>step(1);$("lightbox").addEventListener("click",e=>{if(e.target===$("lightbox"))closeFigure();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeFigure();closeFilters();}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("searchInput").focus();}if(!$("lightbox").classList.contains("hidden")){if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);}});
-window.addEventListener("resize",()=>{clearTimeout(window.__wallResize);window.__wallResize=setTimeout(()=>layoutWall(),120);});
+window.addEventListener("resize",()=>{clearTimeout(window.__wallResize);window.__wallResize=setTimeout(()=>{ $("gallery").innerHTML=""; layoutWall(); },120);});
 load();
